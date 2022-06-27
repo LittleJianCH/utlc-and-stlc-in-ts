@@ -1,0 +1,21 @@
+{
+  "name": "a-tiny-dt-lang-in-ts",
+  "version": "0.0.0",
+  "description": "a tiny dt language written in typescript",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/littlejianch/a-tiny-dt-lang-in-ts.git"
+  },
+  "main": "out/main.js",
+  "scripts": {
+    "clean": "(rm -r ./out || true)",
+    "build": "npm run clean && tsc",
+    "run": "node ./out/main.js"
+  },
+  "keywords": [
+    "dt",
+    "toy-language"
+  ],
+  "author": "LittleJian",
+  "license": "GPL-3.0"
+}
