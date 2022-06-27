@@ -10,6 +10,7 @@
   "scripts": {
     "clean": "(rm -r ./out || true)",
     "build": "npm run clean && tsc",
+    "test": "jest --env=node --colors --coverage test",
     "run": "node ./out/main.js"
   },
   "keywords": [
@@ -17,5 +18,9 @@
     "toy-language"
   ],
   "author": "LittleJian",
-  "license": "GPL-3.0"
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "@types/jest": "^28.1.3",
+    "ts-jest": "^28.0.5"
+  }
 }
