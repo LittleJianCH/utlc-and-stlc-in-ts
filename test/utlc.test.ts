@@ -22,7 +22,7 @@ test('test eval', () => {
 
 test('test eval with undefined variable', () => {
   let env = {
-    ['f']: { env: {}, name: 'f', expr: new Utlc.Lam('x', new Utlc.Var('x')) }
+    ['f']: new Utlc.VClosure({}, 'f', new Utlc.Lam('x', new Utlc.Var('x')))
   };
   let x = new Utlc.Var('x');
   let y = new Utlc.Var('y');
@@ -56,9 +56,10 @@ test('test runProgram', () => {
   expect(Utlc.runProgram([["f", apply_id]], var_f)).toEqual("Undefined variable id");
 });
 
-test('test Church Number', () => {
-  const zero = new Utlc.Lam('f', new Utlc.Lam('x', new Utlc.Var('x')));
-  const succ = new Utlc.Lam('n', new Utlc.Lam('f', new Utlc.Lam('x',
+module Church {
+  export const zero = new Utlc.Lam('f', new Utlc.Lam('x', new Utlc.Var('x')));
+
+  export const succ = new Utlc.Lam('n', new Utlc.Lam('f', new Utlc.Lam('x',
     new Utlc.App(
       new Utlc.Var('f'),
       new Utlc.App(
@@ -69,7 +70,8 @@ test('test Church Number', () => {
         new Utlc.Var('x')
       )
   ))));
-  const add = new Utlc.Lam('n1', new Utlc.Lam('n2', new Utlc.Lam('f', new Utlc.Lam('x',
+
+  export const add = new Utlc.Lam('n1', new Utlc.Lam('n2', new Utlc.Lam('f', new Utlc.Lam('x',
     new Utlc.App(
       new Utlc.App(
         new Utlc.Var('n1'),
@@ -85,27 +87,29 @@ test('test Church Number', () => {
     )
   ))));
 
+  export function fromInt(n: number): Utlc.Expr {
+    if (n == 0) return zero;
+    else return new Utlc.App(succ, fromInt(n - 1));
+  };
+}
+
+test('test Church Number', () => {
   const churchDefs: [Utlc.Name, Utlc.Expr][] = [
-    ['zero', zero],
-    ['succ', succ],
-    ['add', add],
+    ['zero', Church.zero],
+    ['succ', Church.succ],
+    ['add', Church.add],
     ['fx', new Utlc.Lam('f', new Utlc.Lam('x', new Utlc.Var('f')))],
     ['id', new Utlc.Lam('x', new Utlc.Var('x'))]
   ];
-
-  function num2Church(n: number): Utlc.Expr {
-    if (n == 0) return new Utlc.Var('zero');
-    else return new Utlc.App(new Utlc.Var('succ'), num2Church(n - 1));
-  };
 
   const prog1 = new Utlc.App(
     new Utlc.App(
       new Utlc.App(
         new Utlc.App(
           new Utlc.Var('add'),
-          num2Church(5)
+          Church.fromInt(5)
         ),
-        num2Church(4)
+        Church.fromInt(4)
       ),
       new Utlc.Var('fx')
     ), 
@@ -114,7 +118,7 @@ test('test Church Number', () => {
 
   const prog2 = new Utlc.App(
     new Utlc.App(
-      num2Church(9),
+      Church.fromInt(9),
       new Utlc.Var('fx')
     ),
     new Utlc.Var('id')
@@ -122,7 +126,7 @@ test('test Church Number', () => {
 
   const prog3 = new Utlc.App(
     new Utlc.App(
-      num2Church(10),
+      Church.fromInt(10),
       new Utlc.Var('fx')
     ),
     new Utlc.Var('id')
@@ -132,4 +136,25 @@ test('test Church Number', () => {
     .toEqual(Utlc.runProgram(churchDefs, prog2));
   expect(Utlc.runProgram(churchDefs, prog1))
     .not.toEqual(Utlc.runProgram(churchDefs, prog3));
+});
+
+test('test normalize', () => {
+  let expr1 = new Utlc.Lam('x', new Utlc.Var('x'));
+  let expr2 = new Utlc.Var('x');
+  let expr3 = new Utlc.App(expr1, expr1);
+  let churchExpr = new Utlc.App(
+    new Utlc.App(
+      Church.add,
+      Church.fromInt(3)
+    ),
+    Church.fromInt(9)
+  );
+
+  expect(Utlc.normalize(expr1)).toEqual(new Utlc.Lam('x', new Utlc.Var('x')));
+  expect(Utlc.normalize(expr2)).toEqual('Undefined variable x');
+  expect(Utlc.normalize(expr3)).toEqual(new Utlc.Lam('x', new Utlc.Var('x')));
+
+  // Normalizing is useful to identify two expr
+  expect(Utlc.normalize(churchExpr)).toEqual(Utlc.normalize(Church.fromInt(12)));
+  expect(Utlc.normalize(churchExpr)).not.toEqual(Utlc.normalize(Church.fromInt(13)));
 });
