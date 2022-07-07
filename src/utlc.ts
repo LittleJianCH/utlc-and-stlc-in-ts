@@ -6,6 +6,12 @@ export module Utlc {
     [key: Name]: Value;
   }
 
+  class UndefinedVariableError extends Error {
+    constructor(name: Name) {
+      super(`Undefined variable ${name}`);
+    }
+  }
+
   function extendEnv(env: Env, name: Name, value: Value): Env {
     return {
       ...env,
@@ -22,8 +28,8 @@ export module Utlc {
   }
 
   export abstract class Value {
-    abstract doApply(val: Value): Value | Message;
-    abstract readBack(used: Name[]): Expr | Message;
+    abstract doApply(val: Value): Value;
+    abstract readBack(used: Name[]): Expr;
   }
 
   export class VClosure extends Value {
@@ -39,16 +45,7 @@ export module Utlc {
       let x = freshen(this.name, used);
       let val = this.doApply(new VNeutral(new NVar(x)));
       
-      if (typeof val === 'string') {
-        return val;
-      } else {
-        let expr = val.readBack(used);
-        if (typeof expr === 'string') {
-          return expr;
-        } else {
-          return new Lam(x, expr);
-        }
-      }
+      return new Lam(x, val.readBack(used));
     }
   }
 
@@ -67,7 +64,7 @@ export module Utlc {
   }
 
   export abstract class Neutral {
-    abstract readBack(used: Name[]): Expr | Message;
+    abstract readBack(used: Name[]): Expr;
   }
 
   export class NVar extends Neutral {
@@ -89,26 +86,14 @@ export module Utlc {
       let fun = new VNeutral(this.fun).readBack(used);
       let arg = this.arg.readBack(used);
 
-      if (typeof fun === 'string') {
-        return fun;
-      } else if(typeof arg === 'string') {
-        return arg;
-      } else {
-        return new App(fun, arg);
-      }
+      return new App(fun, arg);
     }
   }
 
   export abstract class Expr {
-    abstract eval(env: Env): Value | Message;
-    normalize(): Expr | Message {
-      let val = this.eval({});
-
-      if (typeof val === 'string') {
-        return val;
-      } else {
-        return val.readBack([]);
-      }
+    abstract eval(env: Env): Value;
+    normalize(): Expr {
+      return this.eval({}).readBack([]);
     }
   }
 
@@ -120,7 +105,7 @@ export module Utlc {
     eval(env: Env) {
       let res = env[this.name];
       if (res == undefined) {
-        return `Undefined variable ${this.name}`;
+        throw new UndefinedVariableError(this.name);
       } else {
         return res;
       }
@@ -146,36 +131,38 @@ export module Utlc {
       let fun = this.fun.eval(env);
       let arg = this.arg.eval(env);
 
-      if (typeof fun === 'string') {
-        return fun;
-      } else if (typeof arg === 'string') {
-        return arg;
+      return fun.doApply(arg);
+    }
+  }
+
+  function readMessage<T>(func: () => T): T | Message {
+    try {
+      return func();
+    } catch (e) {
+      if (e instanceof UndefinedVariableError) {
+        return e.message;
       } else {
-        return fun.doApply(arg);
+        throw e;
       }
     }
   }
 
   export function evalExpr(expr: Expr, env: Env): Value | Message {
-    return expr.eval(env);
+    return readMessage(() => expr.eval(env));
   }
 
   export function normalize(expr: Expr): Expr | Message {
-    return expr.normalize();
+    return readMessage(() => expr.normalize());
   }
 
   export function runProgram(defs: [Name, Expr][], expr: Expr): Value | Message {
-    let env = {};
-
-    for (let [name, expr] of defs) {
-      let result = expr.eval(env);
-      if (typeof result === 'string') {
-        return result;
-      } else {
-        env = extendEnv(env, name, result);
+    return readMessage(() => {
+      let env = {};
+      for (let [name, expr] of defs) {
+        let val = expr.eval(env);
+        env = extendEnv(env, name, val);
       }
-    }
-
-    return expr.eval(env);
+      return expr.eval(env);
+    });
   }
 }
