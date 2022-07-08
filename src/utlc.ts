@@ -45,7 +45,7 @@ export module Utlc {
       let x = freshen(this.name, used);
       let val = this.doApply(new VNeutral(new NVar(x)));
       
-      return new Lam(x, val.readBack(used));
+      return new Lam(x, val.readBack(used.concat([x])));
     }
   }
 

@@ -158,3 +158,14 @@ test('test normalize', () => {
   expect(Utlc.normalize(churchExpr)).toEqual(Utlc.normalize(Church.fromInt(12)));
   expect(Utlc.normalize(churchExpr)).not.toEqual(Utlc.normalize(Church.fromInt(13)));
 });
+
+test('test freshen', () => {
+  let expr = new Utlc.Lam('x', 
+    new Utlc.Lam('x', new Utlc.Var('x'))
+  );
+
+  expect(Utlc.normalize(expr))
+    .toEqual(new Utlc.Lam('x',
+      new Utlc.Lam("x'", new Utlc.Var("x\'"))
+    ));
+});
