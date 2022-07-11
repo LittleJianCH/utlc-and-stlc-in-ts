@@ -129,4 +129,14 @@ export module Stlc {
   export function check(ctx: Context, expr: Expr, type: Type) {
     return readMessage(() => checkE(ctx, expr, type));
   };
+
+  export function runProgram(defs: [Name, Expr][], expr: Expr): Type | Message {
+    return readMessage(() => {
+      let ctx = {};
+      for (let [name, def] of defs) {
+        ctx = extendCtx(ctx, name, synthE(ctx, def));
+      }
+      return synthE(ctx, expr);
+    });
+  }
 }

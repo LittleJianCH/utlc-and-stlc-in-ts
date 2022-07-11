@@ -77,3 +77,31 @@ test('test check', () => {
   expect(Stlc.check({}, id, tnat))
     .toEqual(`Cannot match ${str(id)} against ${str(tnat)}`);
 });
+
+test('test runProgram', () => {
+  function applyNTimes(n: number, f: Stlc.Expr, x: Stlc.Expr): Stlc.Expr {
+    for (let i = 0; i < n; i++) {
+      x = { tag: 'App', fun: f, arg: x };
+    }
+    return x;
+  }
+  let defs: [Stlc.Name, Stlc.Expr][] = [
+    ['zero', { tag: 'Zero' }],
+    ['suc', { tag: 'Ann', 
+              type: tn2n,
+              expr: { tag: 'Lam', name: 'x', expr: { tag: 'Succ', arg: { tag: 'Var', name: 'x' } } } }],
+    ['five', applyNTimes(5, { tag: 'Var', name: 'suc' }, { tag: 'Var', name: 'zero' })],
+    ['add', { tag: 'Ann',
+              type: { tag: 'TArr', arg: tnat, res: tn2n },
+              expr: { tag: 'Lam', name: 'x', 
+                      expr: { tag: 'Lam', name: 'y', 
+                              expr: { tag: 'Rec', 
+                                      type: tnat,
+                                      n: { tag: 'Var', name: 'x' },
+                                      b: { tag: 'Var', name: 'y' },
+                                      s: { tag: 'Var', name: 'suc' } } } } }]
+  ];
+
+  expect(Stlc.runProgram(defs, { tag: 'App', fun: { tag: 'Var', name: 'add' }, arg: { tag: 'Var', name: 'five' } }))
+    .toEqual(tn2n);
+});
