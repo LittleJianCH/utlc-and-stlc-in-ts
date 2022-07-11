@@ -169,3 +169,15 @@ test('test freshen', () => {
       new Utlc.Lam("x'", new Utlc.Var("x\'"))
     ));
 });
+
+test('test exprEqual', () => {
+  let expr1 = new Utlc.Lam('x', new Utlc.Var('x'));
+  let expr2 = new Utlc.Lam('y', new Utlc.Var('y'));
+  let expr3 = new Utlc.Lam('x', expr1);
+  let expr4 = new Utlc.Lam('x', new Utlc.Lam('y', new Utlc.Var('x')));
+  let expr5 = new Utlc.Lam('y', new Utlc.Lam('x', new Utlc.Var('x')));
+
+  expect(Utlc.exprEqual(expr1, expr2)).toEqual(true);
+  expect(Utlc.exprEqual(expr1, expr3)).toEqual(false);
+  expect(Utlc.exprEqual(expr4, expr5)).toEqual(false);
+});

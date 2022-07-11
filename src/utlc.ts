@@ -165,4 +165,22 @@ export module Utlc {
       return expr.eval(env);
     });
   }
+
+  function alphaEquiv(a: Expr, b: Expr, namePairs: string[]): boolean {
+    if (a instanceof Var && b instanceof Var) {
+      return namePairs.includes(JSON.stringify([a.name, b.name]));
+    } else if (a instanceof Lam && b instanceof Lam) {
+      return alphaEquiv(a.expr, b.expr, namePairs.concat([JSON.stringify([a.name, b.name])]));
+    } else {
+      return false;
+    }
+  }
+
+  export function exprEqual(a: Expr, b: Expr): boolean | Message {
+    // normalizing has done the beta-reduction, then adding the alpha-equivalence
+    // is enough to check if two expressions are equivalent
+    return readMessage(() => {
+      return alphaEquiv(a.normalize(), b.normalize(), []);
+    });
+  }
 }
