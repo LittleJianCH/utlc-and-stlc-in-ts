@@ -6,7 +6,7 @@
     "type": "git",
     "url": "https://github.com/littlejianch/a-tiny-dt-lang-in-ts.git"
   },
-  "main": "out/main.js",
+  "main": "out/index.js",
   "scripts": {
     "clean": "(rm -r ./out || true)",
     "build": "npm run clean && tsc",

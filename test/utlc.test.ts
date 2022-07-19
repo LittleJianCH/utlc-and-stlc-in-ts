@@ -1,4 +1,4 @@
-import { Utlc } from "../src/utlc";
+import * as Utlc from "../src/utlc"
 
 test('test empty enviorment', () => {
   let env = {};
