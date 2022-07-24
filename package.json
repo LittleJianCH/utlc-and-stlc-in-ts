@@ -11,7 +11,7 @@
     "clean": "(rm -r ./out || true)",
     "build": "npm run clean && tsc",
     "test": "jest --env=node --colors --coverage test",
-    "run": "node ./out/main.js"
+    "run": "node ./out/index.js"
   },
   "keywords": [
     "dt",

@@ -2,11 +2,11 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug main.ts",
+      "name": "Debug index.ts",
       "type": "node",
       "request": "launch",
       "args": [
-        "${workspaceRoot}/src/main.ts"
+        "${workspaceRoot}/src/index.ts"
       ],
       "runtimeArgs": [
         "--nolazy",

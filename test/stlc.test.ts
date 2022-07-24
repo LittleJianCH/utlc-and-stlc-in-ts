@@ -1,4 +1,4 @@
-import { Stlc } from "../src/stlc";
+import * as Stlc from "../src/stlc";
 
 let str = JSON.stringify;
 
