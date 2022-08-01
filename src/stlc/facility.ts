@@ -1,7 +1,7 @@
 import { Name, Message, readMessage } from "./basic";
 import { Expr } from "./expr";
 import { Type } from "./type";
-import { Context, extendCtx } from "./ctx";
+import { Context, extend } from "./env";
 import { synthE } from "./synth";
 import { checkE } from "./check";
 
@@ -17,7 +17,7 @@ export function runProgram(defs: [Name, Expr][], expr: Expr): Type | Message {
   return readMessage(() => {
     let ctx = {};
     for (let [name, def] of defs) {
-      ctx = extendCtx(ctx, name, synthE(ctx, def));
+      ctx = extend(ctx, name, synthE(ctx, def));
     }
     return synthE(ctx, expr);
   });

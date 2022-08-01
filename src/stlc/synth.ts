@@ -2,7 +2,7 @@ import { UndefinedVariableError, TypeError, str } from "./basic";
 import { Expr } from "./expr";
 import { Type } from "./type";
 import { checkE } from "./check";
-import { Context } from "./ctx";
+import { Context } from "./env";
 
 export function synthE(ctx: Context, expr: Expr): Type {
   switch (expr.tag) {
@@ -26,8 +26,8 @@ export function synthE(ctx: Context, expr: Expr): Type {
     case 'Rec':
       let nT = synthE(ctx, expr.n);
       if (nT.tag === 'TNat') {
-        checkE(ctx, expr.b, expr.type);
-        checkE(ctx, expr.s, { tag: 'TArr', arg: expr.type, res: expr.type });
+        checkE(ctx, expr.start, expr.type);
+        checkE(ctx, expr.iter, { tag: 'TArr', arg: expr.type, res: expr.type });
         return expr.type; 
       } else {
         throw new TypeError(`Not a nat type: ${str(nT)}`);

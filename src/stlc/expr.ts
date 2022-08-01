@@ -6,6 +6,6 @@ export type Expr = { tag: 'Var'; name: Name }
                  | { tag: 'App'; fun: Expr; arg: Expr }
                  | { tag: 'Zero' }
                  | { tag: 'Succ'; arg: Expr }
-                 | { tag: 'Rec'; type: Type; n: Expr; b: Expr;  s : Expr } // rec[t] n b s
+                 | { tag: 'Rec'; type: Type; n: Expr; start: Expr; iter: Expr } // iter^n(start)
                  | { tag: 'Ann'; expr: Expr; type: Type }; // expr \in type
   

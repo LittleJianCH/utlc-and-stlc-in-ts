@@ -28,7 +28,7 @@ test('test synth', () => {
   expect(Stlc.synth({}, zero)).toEqual(tnat);
   expect(Stlc.synth({}, { tag: 'Succ', arg: zero })).toEqual(tnat);
 
-  expect(Stlc.synth({}, { tag: 'Rec', type: tnat, n: one, b: zero, s: idAnn }))
+  expect(Stlc.synth({}, { tag: 'Rec', type: tnat, n: one, start: zero, iter: idAnn }))
     .toEqual(tnat);
 
   expect(Stlc.synth({}, { 
@@ -53,10 +53,10 @@ test('test synth with type error', () => {
   expect(Stlc.synth({}, id))
     .toEqual(`Cannot find a type for ${str(id)}, Please add a type annotation`);
   
-  expect(Stlc.synth({}, { tag: 'Rec', type: tnat, n: idAnn, b: zero, s: idAnn }))
+  expect(Stlc.synth({}, { tag: 'Rec', type: tnat, n: idAnn, start: zero, iter: idAnn }))
     .toEqual(`Not a nat type: ${str(tn2n)}`);
   
-  expect(Stlc.synth({}, { tag: 'Rec', type: tnat, n: one, b: zero, s: one }))
+  expect(Stlc.synth({}, { tag: 'Rec', type: tnat, n: one, start: zero, iter: one }))
     .toEqual(`Cannot match ${str(one)} against ${str(tn2n)}`);
  
   expect(Stlc.synth({}, { 
@@ -98,8 +98,8 @@ test('test runProgram', () => {
                               expr: { tag: 'Rec', 
                                       type: tnat,
                                       n: { tag: 'Var', name: 'x' },
-                                      b: { tag: 'Var', name: 'y' },
-                                      s: { tag: 'Var', name: 'suc' } } } } }]
+                                      start: { tag: 'Var', name: 'y' },
+                                      iter: { tag: 'Var', name: 'suc' } } } } }]
   ];
 
   expect(Stlc.runProgram(defs, { tag: 'App', fun: { tag: 'Var', name: 'add' }, arg: { tag: 'Var', name: 'five' } }))

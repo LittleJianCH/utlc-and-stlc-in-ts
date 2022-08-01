@@ -1,5 +1,5 @@
 import { str, TypeError } from "./basic";
-import { Context, extendCtx } from "./ctx";
+import { Context, extend } from "./env";
 import { Expr } from "./expr";
 import { Type } from "./type";
 import { synthE } from "./synth";
@@ -15,7 +15,7 @@ export function checkE(ctx: Context, expr: Expr, type: Type): boolean {
   switch (expr.tag) {
     case 'Lam': 
       if (type.tag === 'TArr') {
-        checkE(extendCtx(ctx, expr.name, type.arg), expr.expr, type.res);
+        checkE(extend(ctx, expr.name, type.arg), expr.expr, type.res);
       } else {
         unmatched(expr, type);
       }
