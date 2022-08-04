@@ -19,6 +19,8 @@ test('test context', () => {
 
 let zero: Stlc.Expr = { tag: 'Zero' };
 let one: Stlc.Expr = { tag: 'Succ', arg: zero };
+let two: Stlc.Expr = { tag: 'Succ', arg: one };
+let three: Stlc.Expr = { tag: 'Succ', arg: two };
 let tnat: Stlc.Type = { tag: 'TNat' };
 let tn2n: Stlc.Type = { tag: 'TArr', arg: tnat, res: tnat };
 let id: Stlc.Expr = { tag: 'Lam', name: 'x', expr: { tag: 'Var', name: 'x' } };
@@ -78,7 +80,7 @@ test('test check', () => {
     .toEqual(`Cannot match ${str(id)} against ${str(tnat)}`);
 });
 
-test('test runProgram', () => {
+test('test runProgramOfType', () => {
   function applyNTimes(n: number, f: Stlc.Expr, x: Stlc.Expr): Stlc.Expr {
     for (let i = 0; i < n; i++) {
       x = { tag: 'App', fun: f, arg: x };
@@ -102,6 +104,58 @@ test('test runProgram', () => {
                                       iter: { tag: 'Var', name: 'suc' } } } } }]
   ];
 
-  expect(Stlc.runProgram(defs, { tag: 'App', fun: { tag: 'Var', name: 'add' }, arg: { tag: 'Var', name: 'five' } }))
+  expect(Stlc.runProgramOfType(defs, { tag: 'App', fun: { tag: 'Var', name: 'add' }, arg: { tag: 'Var', name: 'five' } }))
     .toEqual(tn2n);
+});
+
+let succ: Stlc.Expr = {
+  tag: 'Ann',
+  type: tn2n,
+  expr: { tag: 'Lam', name: 'x', expr: { tag: 'Succ', arg: { tag: 'Var', name: 'x' } } }
+};
+let vzero: Stlc.Value = { tag: 'VZero' };
+let vone: Stlc.Value = { tag: 'VSucc', val: vzero };
+let vtwo: Stlc.Value = { tag: 'VSucc', val: vone };
+let vthree: Stlc.Value = { tag: 'VSucc', val: vtwo };
+let vfour: Stlc.Value = { tag: 'VSucc', val: vthree };
+let vfive: Stlc.Value = { tag: 'VSucc', val: vfour };
+let add: Stlc.Expr = {
+  tag: 'Ann',
+  type: { tag: 'TArr', arg: tnat, res: tn2n },
+  expr: {
+    tag: 'Lam',
+    name: 'x',
+    expr: {
+      tag: 'Lam',
+      name: 'y',
+      expr: {
+        tag: 'Rec',
+        type: tnat,
+        n: { tag: 'Var', name: 'x' },
+        start: { tag: 'Var', name: 'y' },
+        iter: succ
+      }
+    }
+  }
+}
+
+test('test eval', () => {
+  expect(Stlc.evalExpr({}, zero)).toEqual({ tag: 'VZero' });
+  expect(Stlc.evalExpr({}, { tag: 'App', fun: succ, arg: zero })).toEqual(vone);
+  expect(Stlc.evalExpr({}, {
+    tag: 'App',
+    fun: {
+      tag: 'App',
+      fun: add,
+      arg: two,
+    },
+    arg: three
+  })).toEqual(vfive);
+
+  expect(Stlc.evalExpr({}, id))
+    .not.toEqual({"env": {}, "expr": {"name": "x", "tag": "Var"}, "name": "x", "tag": "VClosure"});
+  expect(Stlc.evalExpr({}, { tag: 'Ann', type: tn2n, expr: id }))
+    .toEqual({"env": {}, "expr": {"name": "x", "tag": "Var"}, "name": "x", "tag": "VClosure"});
+  expect(Stlc.evalExpr({}, { tag: 'App', fun: { tag: 'Ann', type: tnat, expr: id }, arg: zero }))
+    .not.toEqual(vzero);
 });

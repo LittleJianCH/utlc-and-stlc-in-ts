@@ -10,6 +10,8 @@ export function evalE(env: Environment, expr: Expr): Value {
     case "Var":
       let res = env[expr.name];
       if (res === undefined) {
+        // this part of the code is unreached
+        // as we will check the type of expr before evaluating it
         throw new UndefinedVariableError(expr.name);
       }
       return res;
