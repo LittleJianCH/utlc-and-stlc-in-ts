@@ -25,9 +25,11 @@ export function runProgramOfType(defs: [Name, Expr][], expr: Expr): Type | Messa
   });
 }
 
-export function evalExpr(env: Environment, expr: Expr): Message | Value {
+export function evalExpr(expr: Expr): Message | Value {
+  // If we want to run the expr in the environment,
+  // we also have to give the context for the type checking.
   return readMessage(() => {
     let _ = synthE({}, expr);
-    return evalE(env, expr);
+    return evalE({}, expr);
   });
 }

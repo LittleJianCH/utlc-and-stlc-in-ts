@@ -140,9 +140,9 @@ let add: Stlc.Expr = {
 }
 
 test('test eval', () => {
-  expect(Stlc.evalExpr({}, zero)).toEqual({ tag: 'VZero' });
-  expect(Stlc.evalExpr({}, { tag: 'App', fun: succ, arg: zero })).toEqual(vone);
-  expect(Stlc.evalExpr({}, {
+  expect(Stlc.evalExpr(zero)).toEqual({ tag: 'VZero' });
+  expect(Stlc.evalExpr({ tag: 'App', fun: succ, arg: zero })).toEqual(vone);
+  expect(Stlc.evalExpr({
     tag: 'App',
     fun: {
       tag: 'App',
@@ -152,10 +152,10 @@ test('test eval', () => {
     arg: three
   })).toEqual(vfive);
 
-  expect(Stlc.evalExpr({}, id))
+  expect(Stlc.evalExpr(id))
     .not.toEqual({"env": {}, "expr": {"name": "x", "tag": "Var"}, "name": "x", "tag": "VClosure"});
-  expect(Stlc.evalExpr({}, { tag: 'Ann', type: tn2n, expr: id }))
+  expect(Stlc.evalExpr({ tag: 'Ann', type: tn2n, expr: id }))
     .toEqual({"env": {}, "expr": {"name": "x", "tag": "Var"}, "name": "x", "tag": "VClosure"});
-  expect(Stlc.evalExpr({}, { tag: 'App', fun: { tag: 'Ann', type: tnat, expr: id }, arg: zero }))
+  expect(Stlc.evalExpr({ tag: 'App', fun: { tag: 'Ann', type: tnat, expr: id }, arg: zero }))
     .not.toEqual(vzero);
 });
