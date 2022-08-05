@@ -17,13 +17,17 @@ test('test context', () => {
     .toEqual(true);
 });
 
+function variable(name: string): Stlc.Expr {
+  return { tag: 'Var', name };
+}
+
 let zero: Stlc.Expr = { tag: 'Zero' };
 let one: Stlc.Expr = { tag: 'Succ', arg: zero };
 let two: Stlc.Expr = { tag: 'Succ', arg: one };
 let three: Stlc.Expr = { tag: 'Succ', arg: two };
 let tnat: Stlc.Type = { tag: 'TNat' };
 let tn2n: Stlc.Type = { tag: 'TArr', arg: tnat, res: tnat };
-let id: Stlc.Expr = { tag: 'Lam', name: 'x', expr: { tag: 'Var', name: 'x' } };
+let id: Stlc.Expr = { tag: 'Lam', name: 'x', expr: variable('x') };
 let idAnn: Stlc.Expr = { tag: 'Ann', expr: id, type: tn2n };
 
 test('test synth', () => {
@@ -45,10 +49,7 @@ test('test synth', () => {
 });
 
 test('test synth with undefined variable', () => {
-  expect(Stlc.synth({}, {
-    tag: 'Var',
-    name: 'x'
-  })).toEqual('Undefined variable x');
+  expect(Stlc.synth({}, variable('x'))).toEqual('Undefined variable x');
 });
 
 test('test synth with type error', () => {
@@ -69,7 +70,7 @@ test('test synth with type error', () => {
 });
 
 test('test check', () => {
-  // Since our stlc isn't syntax-directed, id can be treat as muitiple types
+  // Since our stlc isn't syntax-directed, id can be treated as multiple types
   expect(Stlc.check({}, id, tn2n))
     .toEqual(true);
   expect(Stlc.check({}, id, { tag: 'TArr', arg: tnat, res: tnat }))
@@ -91,20 +92,20 @@ test('test runProgramOfType', () => {
     ['zero', { tag: 'Zero' }],
     ['suc', { tag: 'Ann', 
               type: tn2n,
-              expr: { tag: 'Lam', name: 'x', expr: { tag: 'Succ', arg: { tag: 'Var', name: 'x' } } } }],
-    ['five', applyNTimes(5, { tag: 'Var', name: 'suc' }, { tag: 'Var', name: 'zero' })],
+              expr: { tag: 'Lam', name: 'x', expr: { tag: 'Succ', arg: variable('x') } } }],
+    ['five', applyNTimes(5, variable('suc'), variable('zero'))],
     ['add', { tag: 'Ann',
               type: { tag: 'TArr', arg: tnat, res: tn2n },
               expr: { tag: 'Lam', name: 'x', 
                       expr: { tag: 'Lam', name: 'y', 
                               expr: { tag: 'Rec', 
                                       type: tnat,
-                                      n: { tag: 'Var', name: 'x' },
-                                      start: { tag: 'Var', name: 'y' },
+                                      n: variable('x'),
+                                      start: variable('y'),
                                       iter: { tag: 'Var', name: 'suc' } } } } }]
   ];
 
-  expect(Stlc.runProgramOfType(defs, { tag: 'App', fun: { tag: 'Var', name: 'add' }, arg: { tag: 'Var', name: 'five' } }))
+  expect(Stlc.runProgramOfType(defs, { tag: 'App', fun: variable('add'), arg: variable('five') }))
     .toEqual(tn2n);
 });
 
@@ -158,4 +159,89 @@ test('test eval', () => {
     .toEqual({"env": {}, "expr": {"name": "x", "tag": "Var"}, "name": "x", "tag": "VClosure"});
   expect(Stlc.evalExpr({ tag: 'App', fun: { tag: 'Ann', type: tnat, expr: id }, arg: zero }))
     .not.toEqual(vzero);
+});
+
+function compose(f: Stlc.Expr, g: Stlc.Expr, type: Stlc.Type): Stlc.Expr {
+  return { tag: 'Ann', type: type, expr: {
+    tag: 'Lam', name: 'x',
+    expr: {
+      tag: 'App',
+      fun: f,
+      arg: {
+        tag: 'App',
+        fun: g,
+        arg: { tag: 'Var', name: 'x' }
+      }
+    }
+  } };
+}
+
+function flip(f: Stlc.Expr, arg1Type: Stlc.Type, arg2Type: Stlc.Type, retType: Stlc.Type): Stlc.Expr {
+  return {
+    tag: 'Ann', type: { tag: 'TArr', arg: arg2Type, res: { tag: "TArr", arg: arg1Type, res: retType } },
+    expr: { tag: 'Lam', name: 'a',
+      expr: { tag: 'Lam', name: 'b',
+        expr: {
+          tag: 'App',
+          fun: {
+            tag: 'App',
+            fun: f,
+            arg: variable('b')
+          },
+          arg: variable('a')
+        }
+      }
+    }
+  };
+}
+
+
+test('test exprEqual', () => {
+  expect(Stlc.exprEqual(zero, zero)).toEqual(true);
+  expect(Stlc.exprEqual(zero, one)).toEqual(false);
+
+  let succ1: Stlc.Expr = succ;
+  let succ2: Stlc.Expr = { tag: 'Ann', type: tn2n, expr: {
+    tag: 'Lam', name: 'x',
+    expr: { tag: 'Rec', type: tnat, n: one, start: variable('x') , iter: succ }
+  } };
+  expect(Stlc.exprEqual(succ1, succ2)).toEqual(true);
+
+  let sssucc1: Stlc.Expr = { tag: 'Ann', type: tn2n, expr: compose(compose(succ, succ, tn2n), succ, tn2n) };
+  let sssucc2: Stlc.Expr = { tag: 'Ann', type: tn2n, expr: compose(succ, compose(succ, succ, tn2n), tn2n) };
+  let sssucc3: Stlc.Expr = { tag: 'Ann', type: tn2n, expr: {
+    tag: 'Lam', name: 'x',
+    expr: { tag: 'Rec', type: tnat, n: three, start: variable('x') , iter: succ }
+  } };
+  expect(Stlc.exprEqual(sssucc1, sssucc2)).toEqual(true);
+  expect(Stlc.exprEqual(sssucc1, sssucc3)).toEqual(true);
+  expect(Stlc.exprEqual(sssucc2, sssucc3)).toEqual(true);
+  expect(Stlc.exprEqual(sssucc1, succ1)).toEqual(false);
+
+  let id1: Stlc.Expr = { tag: 'Ann', type: tn2n, expr: id };
+  let id2: Stlc.Expr = compose(id1, id1, tn2n);
+  expect(Stlc.exprEqual(id1, id2)).toEqual(true);
+
+  let add1: Stlc.Expr = add;
+  let add2: Stlc.Expr = flip(flip(add1, tnat, tnat, tnat), tnat, tnat, tnat);
+  let add3: Stlc.Expr = flip(add1, tnat, tnat, tnat);
+  expect(Stlc.exprEqual(add1, add2)).toEqual(true);
+  expect(Stlc.exprEqual(add1, add3)).toEqual(false);
+
+  let apply1: Stlc.Expr = {
+    tag: 'Ann', type: { tag: 'TArr', arg: tn2n, res: tn2n },
+    expr: {
+      tag: 'Lam', name: 'f',
+      expr: {
+        tag: 'Lam', name: 'x',
+        expr: {
+          tag: 'App',
+          fun: variable('f'),
+          arg: variable('x')
+        }
+      }
+    }
+  };
+  let apply2: Stlc.Expr = flip(flip(apply1, tn2n, tnat, tnat), tnat, tn2n, tnat);
+  expect(Stlc.exprEqual(apply1, apply2)).toEqual(true);
 });

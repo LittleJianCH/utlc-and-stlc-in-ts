@@ -14,6 +14,9 @@ export function alphaEquiv(e1: Expr, e2: Expr, namePair: string[]): boolean {
     return alphaEquiv(e1.n, e2.n, namePair) &&
            alphaEquiv(e1.start, e2.start, namePair) &&
            alphaEquiv(e1.iter, e2.iter, namePair);
+  } else if (e1.tag === 'App' && e2.tag === 'App') {
+    return alphaEquiv(e1.fun, e2.fun, namePair) &&
+           alphaEquiv(e1.arg, e2.arg, namePair);
   } else {
     return false;
   }
