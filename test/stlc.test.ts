@@ -244,4 +244,20 @@ test('test exprEqual', () => {
   };
   let apply2: Stlc.Expr = flip(flip(apply1, tn2n, tnat, tnat), tnat, tn2n, tnat);
   expect(Stlc.exprEqual(apply1, apply2)).toEqual(true);
+
+  let tnn2n: Stlc.Type = { tag: 'TArr', arg: tnat, res: tn2n };
+
+  let f1: Stlc.Expr = { tag: 'Ann', type: { tag: 'TArr', arg: tnn2n, res: tnn2n },
+    expr: {
+      tag: 'Lam', name: 'f',
+      expr: flip(flip(variable('f'), tnat, tnat, tnat), tnat, tnat, tnat)
+    }
+  };
+  let f2: Stlc.Expr = { tag: 'Ann', type: { tag: 'TArr', arg: tnn2n, res: tnn2n },
+    expr: {
+      tag: 'Lam', name: 'f',
+      expr: variable('f')
+    }
+  };
+  expect(Stlc.exprEqual(f1, f2)).toEqual(true);
 });
