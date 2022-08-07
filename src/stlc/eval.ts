@@ -1,4 +1,4 @@
-import { UndefinedVariableError } from "./basic";
+import { TypeError, UndefinedVariableError } from "./basic";
 import { Expr } from "./expr";
 import { Value } from "./value";
 import { Environment } from "./env";
@@ -40,5 +40,9 @@ export function evalE(env: Environment, expr: Expr): Value {
 
     case "Ann":
       return evalE(env, expr.expr);
+
+    case 'Hole':
+      // This will also be unreached as we will check the type before
+      throw new TypeError('Cannot evaluate an expression with hole');
   }
 }

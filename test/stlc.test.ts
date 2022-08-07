@@ -57,10 +57,10 @@ test('test synth with type error', () => {
     .toEqual(`Cannot find a type for ${str(id)}, Please add a type annotation`);
   
   expect(Stlc.synth({}, { tag: 'Rec', type: tnat, n: idAnn, start: zero, iter: idAnn }))
-    .toEqual(`Not a nat type: ${str(tn2n)}`);
+      .toEqual(Stlc.unmatchedType(idAnn, tnat).message);
   
   expect(Stlc.synth({}, { tag: 'Rec', type: tnat, n: one, start: zero, iter: one }))
-    .toEqual(`Cannot match ${str(one)} against ${str(tn2n)}`);
+    .toEqual(Stlc.unmatchedType(one, tn2n).message);
  
   expect(Stlc.synth({}, { 
     tag: 'App',
@@ -260,4 +260,23 @@ test('test exprEqual', () => {
     }
   };
   expect(Stlc.exprEqual(f1, f2)).toEqual(true);
+});
+
+function hole(id: number): Stlc.Expr {
+  return { tag: 'Hole', id: id };
+}
+
+test('test Hole', () => {
+  let expr1: Stlc.Expr = hole(1);
+  expect(Stlc.check({}, expr1, tnat)).toEqual(new Stlc.HoleInformation(1, tnat).message);
+
+  let expr2: Stlc.Expr = { tag: 'Lam', name: 'x', expr: hole(1) };
+  expect(Stlc.check({}, expr2, { tag: 'TArr', arg: tn2n, res: tn2n }))
+    .toEqual(new Stlc.HoleInformation(1, tn2n).message);
+  expect(Stlc.check({}, expr2, tnat))
+    .toEqual(Stlc.unmatchedType(expr2, tnat).message);
+
+  let expr3: Stlc.Expr = { tag: 'Rec', n: two, start: hole(1), iter: id, type: tn2n };
+  expect(Stlc.check({}, expr3, tn2n))
+    .toEqual(new Stlc.HoleInformation(1, tn2n).message);
 });

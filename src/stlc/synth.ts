@@ -24,14 +24,10 @@ export function synthE(ctx: Context, expr: Expr): Type {
       }
 
     case 'Rec':
-      let nT = synthE(ctx, expr.n);
-      if (nT.tag === 'TNat') {
-        checkE(ctx, expr.start, expr.type);
-        checkE(ctx, expr.iter, { tag: 'TArr', arg: expr.type, res: expr.type });
-        return expr.type; 
-      } else {
-        throw new TypeError(`Not a nat type: ${str(nT)}`);
-      }
+      checkE(ctx, expr.n, { tag: 'TNat' });
+      checkE(ctx, expr.start, expr.type);
+      checkE(ctx, expr.iter, { tag: 'TArr', arg: expr.type, res: expr.type });
+      return expr.type;
     
     case 'Zero':
       return { tag: 'TNat' };
