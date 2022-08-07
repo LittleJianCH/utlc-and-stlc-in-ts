@@ -34,9 +34,9 @@ export function evalE(env: Environment, expr: Expr): Value {
     case "Rec":
       let n = evalE(env, expr.n);
       let start = evalE(env, expr.start);
-      let iter = evalE(env, expr.iter);
+      let step = evalE(env, expr.step);
 
-      return doRecE(env, expr.type, n, start, iter);
+      return doRecE(env, expr.type, n, start, step);
 
     case "Ann":
       return evalE(env, expr.expr);

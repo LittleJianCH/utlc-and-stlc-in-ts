@@ -6,7 +6,7 @@ export type Expr = { tag: 'Var'; name: Name }
                  | { tag: 'App'; fun: Expr; arg: Expr }
                  | { tag: 'Zero' }
                  | { tag: 'Succ'; arg: Expr }
-                 | { tag: 'Rec'; type: Type; n: Expr; start: Expr; iter: Expr } // iter^n(start)
+                 | { tag: 'Rec'; type: Type; n: Expr; start: Expr; step: Expr } // Rec[n] start step
                  | { tag: 'Ann'; expr: Expr; type: Type } // expr \in type
                  | { tag: 'Hole'; id: number }; // for query in proving
   

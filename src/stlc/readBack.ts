@@ -43,7 +43,7 @@ function readBackNeutral(used: Name[], nval: Neutral): Expr {
       tag: 'Rec',
       type: nval.type, n: readBackNeutral(used, nval.n),
       start: readBackNormal(used, nval.start),
-      iter: readBackNormal(used, nval.iter)
+      step: readBackNormal(used, nval.step)
     };
   }
 }

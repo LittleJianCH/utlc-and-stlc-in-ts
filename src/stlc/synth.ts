@@ -1,6 +1,6 @@
 import { UndefinedVariableError, TypeError, str } from "./basic";
 import { Expr } from "./expr";
-import { Type } from "./type";
+import { multArgFunc, Type } from "./type";
 import { checkE } from "./check";
 import { Context } from "./env";
 
@@ -24,9 +24,10 @@ export function synthE(ctx: Context, expr: Expr): Type {
       }
 
     case 'Rec':
-      checkE(ctx, expr.n, { tag: 'TNat' });
+      let natT: Type = { tag: 'TNat' };
+      checkE(ctx, expr.n, natT);
       checkE(ctx, expr.start, expr.type);
-      checkE(ctx, expr.iter, { tag: 'TArr', arg: expr.type, res: expr.type });
+      checkE(ctx, expr.step, multArgFunc([natT, expr.type, expr.type]));
       return expr.type;
     
     case 'Zero':

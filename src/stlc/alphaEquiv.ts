@@ -13,7 +13,7 @@ export function alphaEquiv(e1: Expr, e2: Expr, namePair: string[]): boolean {
   } else if (e1.tag === 'Rec' && e2.tag === 'Rec') {
     return alphaEquiv(e1.n, e2.n, namePair) &&
            alphaEquiv(e1.start, e2.start, namePair) &&
-           alphaEquiv(e1.iter, e2.iter, namePair);
+           alphaEquiv(e1.step, e2.step, namePair);
   } else if (e1.tag === 'App' && e2.tag === 'App') {
     return alphaEquiv(e1.fun, e2.fun, namePair) &&
            alphaEquiv(e1.arg, e2.arg, namePair);

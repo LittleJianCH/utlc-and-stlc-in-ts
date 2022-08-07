@@ -1,17 +1,16 @@
 import { Environment } from "./env";
-import { Type } from "./type";
+import { multArgFunc, Type } from "./type";
 import { Value } from "./value";
 import { doApplyE } from "./doApply";
 import { str, TypeError } from "./basic";
 
-export function doRecE(env: Environment, type: Type, n: Value, start: Value, iter: Value): Value {
+export function doRecE(env: Environment, type: Type, n: Value, start: Value, step: Value): Value {
   switch (n.tag) {
     case "VZero":
       return start;
 
     case "VSucc":
-      let newStart = doApplyE(iter, start);
-      return doRecE(env, type, n.val, newStart, iter);
+      return doApplyE(doApplyE(step, n), doRecE(env, type, n.val, start, step));
 
     case "VNeutral":
       return {
@@ -22,7 +21,7 @@ export function doRecE(env: Environment, type: Type, n: Value, start: Value, ite
           type: n.type,
           n: n.val,
           start: { val: start, type: type },
-          iter: { val: iter, type: { tag: "TArr", arg: type, res: type } }
+          step: { val: step, type: multArgFunc([{ tag: "TNat" }, type, type]) }
         }
       };
   }

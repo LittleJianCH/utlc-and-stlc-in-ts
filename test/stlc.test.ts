@@ -27,14 +27,17 @@ let two: Stlc.Expr = { tag: 'Succ', arg: one };
 let three: Stlc.Expr = { tag: 'Succ', arg: two };
 let tnat: Stlc.Type = { tag: 'TNat' };
 let tn2n: Stlc.Type = { tag: 'TArr', arg: tnat, res: tnat };
+let tnn2n: Stlc.Type = { tag: 'TArr', arg: tnat, res: tn2n };
 let id: Stlc.Expr = { tag: 'Lam', name: 'x', expr: variable('x') };
 let idAnn: Stlc.Expr = { tag: 'Ann', expr: id, type: tn2n };
+let id_: Stlc.Expr = { tag: 'Lam', name: 't', expr: id };
+let id_Ann: Stlc.Expr = { tag: 'Ann', expr: id_, type: tnn2n };
 
 test('test synth', () => {
   expect(Stlc.synth({}, zero)).toEqual(tnat);
   expect(Stlc.synth({}, { tag: 'Succ', arg: zero })).toEqual(tnat);
 
-  expect(Stlc.synth({}, { tag: 'Rec', type: tnat, n: one, start: zero, iter: idAnn }))
+  expect(Stlc.synth({}, { tag: 'Rec', type: tnat, n: one, start: zero, step: id_Ann }))
     .toEqual(tnat);
 
   expect(Stlc.synth({}, { 
@@ -56,11 +59,11 @@ test('test synth with type error', () => {
   expect(Stlc.synth({}, id))
     .toEqual(`Cannot find a type for ${str(id)}, Please add a type annotation`);
   
-  expect(Stlc.synth({}, { tag: 'Rec', type: tnat, n: idAnn, start: zero, iter: idAnn }))
+  expect(Stlc.synth({}, { tag: 'Rec', type: tnat, n: idAnn, start: zero, step: id_Ann }))
       .toEqual(Stlc.unmatchedType(idAnn, tnat).message);
   
-  expect(Stlc.synth({}, { tag: 'Rec', type: tnat, n: one, start: zero, iter: one }))
-    .toEqual(Stlc.unmatchedType(one, tn2n).message);
+  expect(Stlc.synth({}, { tag: 'Rec', type: tnat, n: one, start: zero, step: one }))
+    .toEqual(Stlc.unmatchedType(one, tnn2n).message);
  
   expect(Stlc.synth({}, { 
     tag: 'App',
@@ -93,6 +96,9 @@ test('test runProgramOfType', () => {
     ['suc', { tag: 'Ann', 
               type: tn2n,
               expr: { tag: 'Lam', name: 'x', expr: { tag: 'Succ', arg: variable('x') } } }],
+    ['suc_', { tag: 'Ann',
+               type: tnn2n,
+               expr: { tag: 'Lam', name: 'x', expr: variable('suc') } }],
     ['five', applyNTimes(5, variable('suc'), variable('zero'))],
     ['add', { tag: 'Ann',
               type: { tag: 'TArr', arg: tnat, res: tn2n },
@@ -102,7 +108,7 @@ test('test runProgramOfType', () => {
                                       type: tnat,
                                       n: variable('x'),
                                       start: variable('y'),
-                                      iter: { tag: 'Var', name: 'suc' } } } } }]
+                                      step: { tag: 'Var', name: 'suc_' } } } } }]
   ];
 
   expect(Stlc.runProgramOfType(defs, { tag: 'App', fun: variable('add'), arg: variable('five') }))
@@ -114,12 +120,18 @@ let succ: Stlc.Expr = {
   type: tn2n,
   expr: { tag: 'Lam', name: 'x', expr: { tag: 'Succ', arg: { tag: 'Var', name: 'x' } } }
 };
+let succ_: Stlc.Expr = {
+  tag: 'Ann',
+  type: tnn2n,
+  expr: { tag: 'Lam', name: 'x', expr: succ }
+};
 let vzero: Stlc.Value = { tag: 'VZero' };
 let vone: Stlc.Value = { tag: 'VSucc', val: vzero };
 let vtwo: Stlc.Value = { tag: 'VSucc', val: vone };
 let vthree: Stlc.Value = { tag: 'VSucc', val: vtwo };
 let vfour: Stlc.Value = { tag: 'VSucc', val: vthree };
 let vfive: Stlc.Value = { tag: 'VSucc', val: vfour };
+let vsix: Stlc.Value = { tag: 'VSucc', val: vfive };
 let add: Stlc.Expr = {
   tag: 'Ann',
   type: { tag: 'TArr', arg: tnat, res: tn2n },
@@ -134,11 +146,22 @@ let add: Stlc.Expr = {
         type: tnat,
         n: { tag: 'Var', name: 'x' },
         start: { tag: 'Var', name: 'y' },
-        iter: succ
+        step: succ_
       }
     }
   }
-}
+};
+let guass: Stlc.Expr = { tag: 'Ann', type: tn2n,
+  expr: { tag: 'Lam', name: 'x',
+    expr: {
+      tag: 'Rec',
+      type: tnat,
+      n: { tag: 'Var', name: 'x' },
+      start: zero,
+      step: add
+    }
+  }
+};
 
 test('test eval', () => {
   expect(Stlc.evalExpr(zero)).toEqual({ tag: 'VZero' });
@@ -159,6 +182,9 @@ test('test eval', () => {
     .toEqual({"env": {}, "expr": {"name": "x", "tag": "Var"}, "name": "x", "tag": "VClosure"});
   expect(Stlc.evalExpr({ tag: 'App', fun: { tag: 'Ann', type: tnat, expr: id }, arg: zero }))
     .not.toEqual(vzero);
+
+  expect(Stlc.evalExpr({ tag: 'App', fun: guass, arg: three }))
+    .toEqual(vsix);
 });
 
 function compose(f: Stlc.Expr, g: Stlc.Expr, type: Stlc.Type): Stlc.Expr {
@@ -203,7 +229,7 @@ test('test exprEqual', () => {
   let succ1: Stlc.Expr = succ;
   let succ2: Stlc.Expr = { tag: 'Ann', type: tn2n, expr: {
     tag: 'Lam', name: 'x',
-    expr: { tag: 'Rec', type: tnat, n: one, start: variable('x') , iter: succ }
+    expr: { tag: 'Rec', type: tnat, n: one, start: variable('x') , step: succ_ }
   } };
   expect(Stlc.exprEqual(succ1, succ2)).toEqual(true);
 
@@ -211,7 +237,7 @@ test('test exprEqual', () => {
   let sssucc2: Stlc.Expr = { tag: 'Ann', type: tn2n, expr: compose(succ, compose(succ, succ, tn2n), tn2n) };
   let sssucc3: Stlc.Expr = { tag: 'Ann', type: tn2n, expr: {
     tag: 'Lam', name: 'x',
-    expr: { tag: 'Rec', type: tnat, n: three, start: variable('x') , iter: succ }
+    expr: { tag: 'Rec', type: tnat, n: three, start: variable('x') , step: succ_ }
   } };
   expect(Stlc.exprEqual(sssucc1, sssucc2)).toEqual(true);
   expect(Stlc.exprEqual(sssucc1, sssucc3)).toEqual(true);
@@ -245,8 +271,6 @@ test('test exprEqual', () => {
   let apply2: Stlc.Expr = flip(flip(apply1, tn2n, tnat, tnat), tnat, tn2n, tnat);
   expect(Stlc.exprEqual(apply1, apply2)).toEqual(true);
 
-  let tnn2n: Stlc.Type = { tag: 'TArr', arg: tnat, res: tn2n };
-
   let f1: Stlc.Expr = { tag: 'Ann', type: { tag: 'TArr', arg: tnn2n, res: tnn2n },
     expr: {
       tag: 'Lam', name: 'f',
@@ -276,7 +300,7 @@ test('test Hole', () => {
   expect(Stlc.check({}, expr2, tnat))
     .toEqual(Stlc.unmatchedType(expr2, tnat).message);
 
-  let expr3: Stlc.Expr = { tag: 'Rec', n: two, start: hole(1), iter: id, type: tn2n };
+  let expr3: Stlc.Expr = { tag: 'Rec', n: two, start: hole(1), step: id, type: tn2n };
   expect(Stlc.check({}, expr3, tn2n))
     .toEqual(new Stlc.HoleInformation(1, tn2n).message);
 });
