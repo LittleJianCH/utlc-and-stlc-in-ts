@@ -1,4 +1,4 @@
-import { Expr, Var, Lam } from "./expr";
+import { Expr, Var, Lam, App } from "./expr";
 import { Value } from "./value";
 import { Env, extendEnv } from "./env";
 import { readMessage, Message, Name } from "./basic";
@@ -27,6 +27,9 @@ function alphaEquiv(a: Expr, b: Expr, namePairs: string[]): boolean {
     return namePairs.includes(JSON.stringify([a.name, b.name]));
   } else if (a instanceof Lam && b instanceof Lam) {
     return alphaEquiv(a.expr, b.expr, namePairs.concat([JSON.stringify([a.name, b.name])]));
+  } else if (a instanceof App && b instanceof App) {
+    return alphaEquiv(a.arg, b.arg, namePairs) &&
+           alphaEquiv(a.fun, b.fun, namePairs);
   } else {
     return false;
   }

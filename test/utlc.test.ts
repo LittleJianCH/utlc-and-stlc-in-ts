@@ -170,6 +170,17 @@ test('test freshen', () => {
     ));
 });
 
+function flip(f: Utlc.Expr): Utlc.Expr {
+  return new Utlc.Lam('x',
+    new Utlc.Lam('y',
+      new Utlc.App(
+        new Utlc.App(f, new Utlc.Var('y')),
+        new Utlc.Var('x')
+      ),
+    )
+  );
+}
+
 test('test exprEqual', () => {
   let expr1 = new Utlc.Lam('x', new Utlc.Var('x'));
   let expr2 = new Utlc.Lam('y', new Utlc.Var('y'));
@@ -180,4 +191,28 @@ test('test exprEqual', () => {
   expect(Utlc.exprEqual(expr1, expr2)).toEqual(true);
   expect(Utlc.exprEqual(expr1, expr3)).toEqual(false);
   expect(Utlc.exprEqual(expr4, expr5)).toEqual(false);
+
+  let expr6 = new Utlc.Lam('f',
+    new Utlc.Var('f')
+  );
+  let expr7 = new Utlc.Lam('f',
+    flip(flip(new Utlc.Var('f')))
+  );
+  let expr8 = new Utlc.Lam('f',
+    flip(flip(flip(flip(new Utlc.Var('f')))))
+  );
+  let expr9 = new Utlc.Lam('f',
+    new Utlc.Lam('x',
+      new Utlc.Lam('y',
+        new Utlc.App(
+          new Utlc.App(new Utlc.Var('f'), new Utlc.Var('x')),
+          new Utlc.Var('y')
+        )
+      )
+    )
+  );
+
+  expect(Utlc.exprEqual(expr6, expr7)).toEqual(false);
+  expect(Utlc.exprEqual(expr7, expr8)).toEqual(true);
+  expect(Utlc.exprEqual(expr8, expr9)).toEqual(true);
 });
