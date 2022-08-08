@@ -12,10 +12,19 @@ export function checkE(ctx: Context, expr: Expr, type: Type): boolean {
     case 'Lam': 
       if (type.tag === 'TArr') {
         checkE(extend(ctx, expr.name, type.arg), expr.expr, type.res);
+        return true;
       } else {
         throw unmatchedType(expr, type);
       }
-      return true;
+
+    case 'Cons':
+      if (type.tag === 'TPair') {
+        checkE(ctx, expr.car, type.car);
+        checkE(ctx, expr.cdr, type.cdr);
+        return true;
+      } else {
+        throw unmatchedType(expr, type);
+      }
 
     case 'Hole':
       throw new HoleInformation(expr.id, type);

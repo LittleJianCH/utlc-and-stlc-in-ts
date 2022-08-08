@@ -4,6 +4,8 @@ import { Value } from "./value";
 import { Environment } from "./env";
 import { doApplyE } from "./doApply";
 import { doRecE } from "./doRec";
+import { doCarE } from "./doCar";
+import { doCdrE } from "./doCdr";
 
 export function evalE(env: Environment, expr: Expr): Value {
   switch (expr.tag) {
@@ -37,6 +39,17 @@ export function evalE(env: Environment, expr: Expr): Value {
       let step = evalE(env, expr.step);
 
       return doRecE(env, expr.type, n, start, step);
+
+    case "Cons":
+      return { tag: "VPair", car: evalE(env, expr.car), cdr: evalE(env, expr.cdr) };
+
+    case "Car":
+      let vPair1 = evalE(env, expr.arg);
+      return doCarE(vPair1);
+
+    case "Cdr":
+      let vPair2 = evalE(env, expr.arg);
+      return doCdrE(vPair2);
 
     case "Ann":
       return evalE(env, expr.expr);

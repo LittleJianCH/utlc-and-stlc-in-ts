@@ -1,5 +1,6 @@
 export type Type = { tag: 'TNat' }
-                 | { tag: 'TArr'; arg: Type; res: Type }; // arg -> res
+                 | { tag: 'TArr'; arg: Type; res: Type } // arg -> res
+                 | { tag: 'TPair'; car: Type; cdr: Type };
 
 export function multArgFunc(args: Type[]): Type {
   if (args.length === 0) {

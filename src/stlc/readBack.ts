@@ -5,6 +5,8 @@ import { Type } from "./type";
 import { freshen } from "./freshen";
 import { doApplyE } from "./doApply";
 import { Neutral } from "./neutral";
+import { doCarE } from "./doCar";
+import { doCdrE } from "./doCdr";
 
 export function readBack(used: Name[], type: Type, val: Value): Expr {
   switch (type.tag) {
@@ -32,6 +34,12 @@ export function readBack(used: Name[], type: Type, val: Value): Expr {
       let argVal: Value = { tag: 'VNeutral', type: type.arg, val: { tag: 'NVar', name: arg } };
 
       return { tag: 'Lam', name: arg, expr: readBack(used.concat([arg]), type.res, doApplyE(val, argVal)) };
+
+    case 'TPair':
+      let carVal = doCarE(val);
+      let cdrVal = doCdrE(val);
+
+      return { tag: 'Cons', car: readBack(used, type.car, carVal), cdr: readBack(used, type.cdr, cdrVal) };
   }
 }
 
@@ -39,12 +47,14 @@ function readBackNeutral(used: Name[], nval: Neutral): Expr {
   switch (nval.tag) {
     case 'NVar': return { tag: 'Var', name: nval.name };
     case 'NApp': return { tag: 'App', fun: readBackNeutral(used, nval.fun), arg: readBackNormal(used, nval.arg) };
-    case "NRec": return {
+    case 'NRec': return {
       tag: 'Rec',
       type: nval.type, n: readBackNeutral(used, nval.n),
       start: readBackNormal(used, nval.start),
       step: readBackNormal(used, nval.step)
     };
+    case 'NCar': return { tag: 'Car', arg: readBackNeutral(used, nval.arg) };
+    case 'NCdr': return { tag: 'Cdr', arg: readBackNeutral(used, nval.arg) };
   }
 }
 

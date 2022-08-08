@@ -321,3 +321,78 @@ test('test Hole', () => {
   expect(Stlc.check({}, expr3, tn2n))
     .toEqual(new Stlc.HoleInformation(1, tn2n).message);
 });
+
+let tnpp: Stlc.Type = { tag: 'TPair', car: tnat, cdr: tnat };
+let tn2pnn: Stlc.Type = { tag: 'TArr', arg: tnat, res: tnpp };
+let tnn2pnn: Stlc.Type = { tag: 'TArr', arg: tnat, res: tn2pnn };
+
+test('test Pair', () => {
+  let pairZeroZero: Stlc.Expr = { tag: 'Cons', car: zero, cdr: zero };
+  expect(Stlc.synth({}, pairZeroZero)).toEqual(tnpp);
+
+  let carPairZeroZero: Stlc.Expr = { tag: 'Car', arg: pairZeroZero };
+  let cdrPairZeroZero: Stlc.Expr = { tag: 'Cdr', arg: pairZeroZero };
+  expect(Stlc.synth({}, carPairZeroZero)).toEqual(tnat);
+  expect(Stlc.synth({}, cdrPairZeroZero)).toEqual(tnat);
+
+  let f1: Stlc.Expr = { tag: 'Ann', type: tnn2n,
+    expr: { tag: 'Lam', name: 'x',
+      expr: { tag: 'Lam', name: 'y',
+        expr: {
+          tag: 'Car',
+          arg: { tag: 'Cons', car: variable('x'), cdr: variable('y') } }
+      }
+    }
+  };
+  let f2: Stlc.Expr = { tag: 'Ann', type: tnn2n,
+    expr: { tag: 'Lam', name: 'y',
+      expr: { tag: 'Lam', name: 'x',
+        expr: {
+          tag: 'Cdr',
+          arg: { tag: 'Cons', car: variable('x'), cdr: variable('y') } }
+      }
+    }
+  };
+  let f3: Stlc.Expr = { tag: 'Ann', type: tnn2n,
+    expr: { tag: 'Lam', name: 'x',
+      expr: { tag: 'Lam', name: 'y',
+        expr: variable('x')
+      }
+    }
+  };
+  expect(Stlc.exprEqual(f1, f2)).toEqual(true);
+  expect(Stlc.exprEqual(f1, f3)).toEqual(true);
+  expect(Stlc.exprEqual(f2, f3)).toEqual(true);
+
+  let f4: Stlc.Expr = {
+    tag: 'Ann', type: tnn2pnn,
+    expr: { tag: 'Lam', name: 'x',
+      expr: { tag: 'Lam', name: 'y',
+        expr: { tag: 'Cons', car: variable('x'), cdr: variable('y') }
+      }
+    }
+  };
+  let f5: Stlc.Expr = {
+    tag: 'Ann', type: tnn2pnn,
+    expr: { tag: 'Lam', name: 'x',
+      expr: { tag: 'Lam', name: 'y',
+        expr: { tag: 'Cons', car: variable('y'), cdr: variable('x') }
+      }
+    }
+  };
+  let f6: Stlc.Expr = flip(f5, tnat, tnat, tnpp);
+  expect(Stlc.exprEqual(f4, f5)).toEqual(false);
+  expect(Stlc.exprEqual(f4, f6)).toEqual(true);
+
+  let car: Stlc.Expr = { tag: 'Ann', type: { tag: 'TArr', arg: tnpp, res: tnat },
+    expr: { tag: 'Lam', name: 'p',
+      expr: { tag: 'Car', arg: variable('p') }
+    }
+  };
+  let cdr: Stlc.Expr = { tag: 'Ann', type: { tag: 'TArr', arg: tnpp, res: tnat },
+    expr: { tag: 'Lam', name: 'p',
+      expr: { tag: 'Cdr', arg: variable('p') }
+    }
+  };
+  expect(Stlc.exprEqual(car, cdr)).toEqual(false);
+});

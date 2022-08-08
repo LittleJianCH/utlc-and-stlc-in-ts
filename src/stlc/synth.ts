@@ -37,6 +37,25 @@ export function synthE(ctx: Context, expr: Expr): Type {
       checkE(ctx, expr.arg, { tag: 'TNat' });
       return { tag: 'TNat' };
 
+    case 'Cons':
+      let carT = synthE(ctx, expr.car);
+      let cdrT = synthE(ctx, expr.cdr);
+      return { tag: 'TPair', car: carT, cdr: cdrT };
+
+    case 'Car':
+      let pairT1 = synthE(ctx, expr.arg);
+      if (pairT1.tag === 'TPair') {
+        return pairT1.car;
+      }
+      throw new TypeError(`Not a pair type: ${str(pairT1)}`);
+
+    case 'Cdr':
+      let pairT2 = synthE(ctx, expr.arg);
+      if (pairT2.tag === 'TPair') {
+        return pairT2.cdr;
+      }
+      throw new TypeError(`Not a pair type: ${str(pairT2)}`);
+
     case 'Ann':
       checkE(ctx, expr.expr, expr.type);
       return expr.type;

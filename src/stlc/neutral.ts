@@ -4,4 +4,6 @@ import { Type } from "./type";
 
 export type Neutral = { tag: 'NVar'; name: Name }
                     | { tag: 'NApp'; fun: Neutral; arg: Normal }
-                    | { tag: 'NRec'; type: Type; n: Neutral; start: Normal; step: Normal };
+                    | { tag: 'NRec'; type: Type; n: Neutral; start: Normal; step: Normal }
+                    | { tag: 'NCar'; arg: Neutral }
+                    | { tag: 'NCdr'; arg: Neutral };
