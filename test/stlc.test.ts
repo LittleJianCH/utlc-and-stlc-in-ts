@@ -284,6 +284,23 @@ test('test exprEqual', () => {
     }
   };
   expect(Stlc.exprEqual(f1, f2)).toEqual(true);
+
+  let expr1: Stlc.Expr = {
+    tag: 'Ann', type: { tag: 'TArr', arg: tn2n, res: tn2n },
+    expr: {
+      tag: 'Lam', name: 'f',
+      expr: variable('f')
+    }
+  };
+  let expr2: Stlc.Expr = {
+    tag: 'Ann', type: tn2n,
+    expr: {
+      tag: 'Lam', name: 'f',
+      expr: variable('f')
+    }
+  };
+
+  expect(Stlc.exprEqual(expr1, expr2)).toEqual(false);
 });
 
 function hole(id: number): Stlc.Expr {
