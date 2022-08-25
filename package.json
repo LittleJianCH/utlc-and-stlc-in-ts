@@ -1,10 +1,10 @@
 {
-  "name": "a-tiny-dt-lang-in-ts",
-  "version": "0.0.0",
-  "description": "a tiny dt language written in typescript",
+  "name": "utlc-and-stlc-in-ts",
+  "version": "0.0.1",
+  "description": "un&simple-type lambda calculus written in typescript",
   "repository": {
     "type": "git",
-    "url": "https://github.com/littlejianch/a-tiny-dt-lang-in-ts.git"
+    "url": "https://github.com/littlejianch/utlc-and-stlc-in-ts.git"
   },
   "main": "out/index.js",
   "scripts": {
