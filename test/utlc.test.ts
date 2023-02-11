@@ -8,6 +8,15 @@ test('test empty enviorment', () => {
   expect(value).toEqual({ env, name, expr });
 });
 
+test('a challenge from sanpo🥰', () => {
+  let env = {};
+  let expr1 = new Utlc.Lam('x', new Utlc.Lam('x', new Utlc.Var('x')));
+  let expr2 = new Utlc.Lam('y', new Utlc.Lam('x', new Utlc.Var('x')));
+  let expr3 = new Utlc.Lam('x', new Utlc.Lam('t', new Utlc.Var('x')));
+  expect(Utlc.exprEqual(expr1, expr2)).toEqual(true);
+  expect(Utlc.exprEqual(expr1, expr3)).toEqual(false);
+})
+
 test('test eval', () => {
   let env = {};
   let fun = new Utlc.Lam('x', new Utlc.App(
